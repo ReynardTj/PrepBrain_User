@@ -9,7 +9,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // ⚠ Replace 'customer-app' with your exact GitHub repo name
-  // e.g. if your repo is github.com/username/wouldyoutry → base: '/wouldyoutry/'
-  base: process.env.NODE_ENV === 'production' ? '/prepbrain-user/' : '/',
+  // Replace YOUR_REPO_NAME with your exact GitHub repository name
+  // e.g. if repo is github.com/username/wouldyoutry → '/wouldyoutry/'
+  base: '/PrepBrain_User/',
 })
