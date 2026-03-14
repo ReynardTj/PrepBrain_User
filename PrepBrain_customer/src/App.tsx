@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import Navbar from './components/layout/Navbar'
+import Navbar from './components/layout/navbar'
 import FeedPage from './pages/FeedPage'
 import RankingPage from './pages/RankingPage'
-import HallOfFamePage from './pages/HallOfFamePage'
-import ExplorePage from './pages/ExplorePage'
-import DashboardPage from './pages/DashboardPage'
+import HallOfFamePage from './pages/hallOfFamePage'
+import ExplorePage from './pages/explorePage'
+import DashboardPage from './pages/dashboardPage'
 import type { ActiveTab } from './types'
 
 export default function App() {
