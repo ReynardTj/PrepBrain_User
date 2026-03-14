@@ -22,7 +22,7 @@ export default function Navbar({ activeTab, onChange }: Props) {
             <div className="bg-slate-900 p-3 rounded-[18px] group-hover:rotate-12 transition-transform">
               <Leaf className="text-green-400" size={28} fill="currentColor" />
             </div>
-            <span className="text-3xl font-[1000] tracking-tighter text-slate-900">WouldYouTry</span>
+            <span className="text-3xl font-[1000] tracking-tighter text-slate-900">PrepBrain</span>
           </div>
 
           <div className="hidden lg:flex items-center gap-10">
