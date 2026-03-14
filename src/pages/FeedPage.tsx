@@ -1,22 +1,98 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { TrendingUp, ArrowUpRight } from 'lucide-react'
 import MiniProfile from '../components/feed/miniProfile'
 import DiscoverSidebar from '../components/feed/discoverSidebar'
 import PostCard from '../components/feed/postCard'
 import PostComposer from '../components/feed/postComposer'
 import VoteModal from '../components/shared/voteModal'
-import { CATEGORIZED_POSTS, ALL_POSTS_FLAT } from '../data/mockData'
+import { CATEGORIZED_POSTS } from '../data/mockData'
 import { usePosts } from '../hooks/usePosts'
+import { supabase } from '../lib/supabase'
 import type { Post, FeedCategory } from '../types'
+
+const HARDCODED_IMAGES = [
+  'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400',
+  'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=400',
+  'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=400',
+  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400',
+  'https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=400',
+  'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400',
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+  'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
+]
+
+const RESTAURANT_NAMES = [
+  'Lune Croissanterie',
+  'Hardware Société',
+  'Higher Ground',
+  'Cumulus Inc.',
+  'Krimper Cafe',
+  'Hash Specialty',
+  'Yarra Kitchen',
+  'Melbourne Eatery',
+]
+
+const LOCATIONS = [
+  'Melbourne CBD',
+  'Fitzroy',
+  'South Yarra',
+  'Brunswick',
+  'Carlton',
+  'Collingwood',
+  'Prahran',
+  'City Center',
+]
 
 export default function FeedPage() {
   const [feedCategory, setFeedCategory] = useState<FeedCategory>('All Items')
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [menuItems, setMenuItems] = useState<Post[]>([])
+  const [loading, setLoading] = useState(true)
   const { userPosts, createPost } = usePosts()
+
+  useEffect(() => {
+    fetchMenuItems()
+  }, [])
+
+  const fetchMenuItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('id, dish_name, description, thumbs_up, thumbs_down, waste_score, portions_to_clear, cafe_id')
+      
+      if (error) {
+        console.error('Error fetching menu items:', error)
+      } else if (data) {
+        const transformedPosts = data.map((item: any, index: number) => ({
+          id: item.id,
+          restaurant: RESTAURANT_NAMES[index % RESTAURANT_NAMES.length],
+          location: LOCATIONS[index % LOCATIONS.length],
+          dishName: item.dish_name,
+          description: item.description || 'Delicious off-menu special',
+          image: HARDCODED_IMAGES[index % HARDCODED_IMAGES.length],
+          likes: Math.floor(Math.random() * 100),
+          rating: parseFloat((Math.random() * 2 + 3.5).toFixed(1)),
+          wasteSaved: `${Math.floor(Math.random() * 3 + 1)} kg`,
+          tagline: 'Limited time offer',
+          impact: `Saves approx. ${item.portions_to_clear || 2} meals`,
+          comments: [],
+          originalCategory: 'Fresh' as const,
+          thumbs_up: item.thumbs_up || 0,
+          thumbs_down: item.thumbs_down || 0,
+        })) as Post[]
+        
+        setMenuItems(transformedPosts)
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const allPostsData: Record<string, Post[]> = {
     ...CATEGORIZED_POSTS,
-    'All Items': [...userPosts, ...ALL_POSTS_FLAT],
+    'All Items': [...userPosts, ...menuItems],
   }
 
   const handleVote = (post: Post) => setSelectedPost(post)
@@ -24,6 +100,11 @@ export default function FeedPage() {
   const handlePost = (dishName: string, desc: string, waste: string, image: string | null) => {
     createPost(dishName, desc, waste, image)
     setFeedCategory('All Items')
+  }
+
+  const handleThumbsVoteChange = () => {
+    // Refetch menu items after a thumbs vote is updated
+    fetchMenuItems()
   }
 
   return (
@@ -42,9 +123,18 @@ export default function FeedPage() {
         {/* Main feed */}
         <div className="col-span-6 space-y-8">
           <PostComposer onPost={handlePost} />
-          {(allPostsData[feedCategory] || []).map(post => (
-            <PostCard key={post.id} post={post} onVote={handleVote} />
-          ))}
+          {loading ? (
+            <div className="text-center text-slate-400 py-8">Loading menu items...</div>
+          ) : (
+            (allPostsData[feedCategory] || []).map(post => (
+              <PostCard 
+                key={post.id} 
+                post={post} 
+                onVote={handleVote}
+                onThumbsVoteChange={handleThumbsVoteChange}
+              />
+            ))
+          )}
         </div>
 
         {/* Right sidebar */}

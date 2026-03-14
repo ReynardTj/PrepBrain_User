@@ -20,6 +20,8 @@ export interface Post {
   impact: string
   comments: Comment[]
   originalCategory: string
+  thumbs_up?: number
+  thumbs_down?: number
 }
 
 export interface RankItem {

@@ -1,12 +1,75 @@
-import { Heart, MessageCircle, Share2, MapPin, Leaf, Sparkles, Gem, Clock, Trophy, Zap, Star, ShoppingBag, MoreHorizontal } from 'lucide-react'
+import { Heart, MessageCircle, Share2, MapPin, Leaf, Sparkles, Gem, Clock, Trophy, Zap, Star, ShoppingBag, MoreHorizontal, ThumbsUp, ThumbsDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import type { Post } from '../../types'
+import { supabase } from '../../lib/supabase'
 
 interface Props {
   post: Post
   onVote: (post: Post) => void
+  onThumbsVoteChange?: (postId: string | number, thumbsUp: number, thumbsDown: number) => void
 }
 
-export default function PostCard({ post, onVote }: Props) {
+export default function PostCard({ post, onVote, onThumbsVoteChange }: Props) {
+  const [thumbsUp, setThumbsUp] = useState(post.thumbs_up || 0)
+  const [thumbsDown, setThumbsDown] = useState(post.thumbs_down || 0)
+
+  // Sync state with post data whenever post changes (e.g., on refresh from database)
+  useEffect(() => {
+    setThumbsUp(post.thumbs_up || 0)
+    setThumbsDown(post.thumbs_down || 0)
+  }, [post.thumbs_up, post.thumbs_down])
+
+  const handleThumbsUp = async () => {
+    const oldThumbsUp = thumbsUp;
+    const newThumbsUp = thumbsUp + 1;
+    setThumbsUp(newThumbsUp);
+    // Update in Supabase if post has an id
+    if (post.id) {
+      const { error, data } = await supabase
+        .from('menu_items')
+        .update({ thumbs_up: newThumbsUp })
+        .eq('id', post.id)
+        .select();
+      if (error) {
+        console.error('Error updating thumbs up:', error);
+        setThumbsUp(oldThumbsUp); // Revert on error
+        alert('Failed to update thumbs up. Please try again.');
+      } else {
+        console.log('✓ Thumbs up updated successfully in database:', data);
+        if (onThumbsVoteChange) {
+          onThumbsVoteChange(post.id, newThumbsUp, thumbsDown);
+        }
+      }
+    } else {
+      console.warn('Post ID is missing, cannot update database');
+    }
+  };
+
+  const handleThumbsDown = async () => {
+    const oldThumbsDown = thumbsDown;
+    const newThumbsDown = thumbsDown + 1;
+    setThumbsDown(newThumbsDown);
+    // Update in Supabase if post has an id
+    if (post.id) {
+      const { error, data } = await supabase
+        .from('menu_items')
+        .update({ thumbs_down: newThumbsDown })
+        .eq('id', post.id)
+        .select();
+      if (error) {
+        console.error('Error updating thumbs down:', error);
+        setThumbsDown(oldThumbsDown); // Revert on error
+        alert('Failed to update thumbs down. Please try again.');
+      } else {
+        console.log('✓ Thumbs down updated successfully in database:', data);
+        if (onThumbsVoteChange) {
+          onThumbsVoteChange(post.id, thumbsUp, newThumbsDown);
+        }
+      }
+    } else {
+      console.warn('Post ID is missing, cannot update database');
+    }
+  };
   return (
     <div className="bg-white rounded-[40px] border border-slate-200 overflow-hidden group">
       {/* Header */}
@@ -112,6 +175,18 @@ export default function PostCard({ post, onVote }: Props) {
             </button>
             <button className="flex items-center gap-2 text-slate-400 font-black hover:text-slate-900 transition-colors">
               <Share2 size={24} />
+            </button>
+            <button
+              onClick={handleThumbsUp}
+              className="flex items-center gap-2 text-slate-400 font-black hover:text-green-500 transition-colors group"
+            >
+              <ThumbsUp size={24} className="group-hover:fill-green-500 transition-all" /> <span>{thumbsUp}</span>
+            </button>
+            <button
+              onClick={handleThumbsDown}
+              className="flex items-center gap-2 text-slate-400 font-black hover:text-red-500 transition-colors group"
+            >
+              <ThumbsDown size={24} className="group-hover:fill-red-500 transition-all" /> <span>{thumbsDown}</span>
             </button>
           </div>
           <button

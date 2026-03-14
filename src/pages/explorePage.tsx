@@ -1,9 +1,63 @@
 import { Store, Star, Flame, MapPin } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useMapDrag } from '../hooks/useMapDrag'
 import { MAP_PINS } from '../data/mockData'
+import { supabase } from '../lib/supabase'
+
+interface MenuItem {
+  id: string
+  dish_name: string
+  description: string
+  thumbs_up: number
+  thumbs_down: number
+  cafe_id: string
+}
+
+const HARDCODED_IMAGES = [
+  'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=100',
+  'https://images.unsplash.com/photo-1525351484163-7529414344d8?w=100',
+  'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=100',
+  'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=100',
+  'https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=100',
+  'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=100',
+]
 
 export default function ExplorePage() {
   const { mapPos, handleMouseDown, handleMouseMove, handleMouseUp } = useMapDrag()
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchMenuItems()
+  }, [])
+
+  const fetchMenuItems = async () => {
+    try {
+      console.log('Fetching menu items from Supabase...')
+      const { data, error } = await supabase
+        .from('menu_items')
+        .select('id, dish_name, description, thumbs_up, thumbs_down, cafe_id')
+      
+      console.log('Response:', { data, error })
+      
+      if (error) {
+        console.error('Supabase error:', error)
+        setError(`Error: ${error.message}`)
+      } else {
+        console.log('Menu items fetched:', data?.length || 0)
+        setMenuItems(data || [])
+        setError(null)
+      }
+    } catch (err) {
+      console.error('Catch error:', err)
+      setError(`Error: ${err instanceof Error ? err.message : String(err)}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
 
   return (
     <div className="max-w-6xl mx-auto py-8 flex flex-col" style={{ height: 'calc(100vh - 120px)', minHeight: '650px' }}>
@@ -56,28 +110,38 @@ export default function ExplorePage() {
         {/* Sidebars */}
         <div className="col-span-4 flex flex-col gap-6 h-full overflow-hidden">
           <div className="bg-slate-900 rounded-[32px] p-6 text-white shadow-xl flex-1 overflow-y-auto flex flex-col">
-            <h3 className="font-black text-slate-100 mb-4 flex items-center gap-2 shrink-0"><Flame size={18} className="text-orange-500" /> Popular Spots CBD</h3>
-            <div className="space-y-3 flex-1">
-              {[
-                { name: "Lune Croissanterie", rating: "4.9", reviews: "1,248", img: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=100", tag: "Trending" },
-                { name: "Hardware Société", rating: "4.8", reviews: "895", img: "https://images.unsplash.com/photo-1525351484163-7529414344d8?w=100", tag: "High Value" },
-                { name: "Higher Ground", rating: "4.9", reviews: "1,110", img: "https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=100", tag: "Awarded" }
-              ].map((p, i) => (
-                <div key={i} className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group">
-                  <img src={p.img} alt={p.name} className="w-12 h-12 rounded-[12px] object-cover border border-white/10" draggable={false} />
-                  <div className="flex-1">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-black text-white">{p.name}</span>
-                      <span className="text-[8px] font-black uppercase tracking-wider text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-md">{p.tag}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-yellow-400"><Star size={10} fill="currentColor" /> {p.rating}</span>
-                      <span className="text-[9px] text-slate-400 font-medium">({p.reviews})</span>
+            <h3 className="font-black text-slate-100 mb-4 flex items-center gap-2 shrink-0"><Flame size={18} className="text-orange-500" /> Menu Items</h3>
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-xs">
+                {error}
+              </div>
+            )}
+            {loading ? (
+              <p className="text-slate-400">Loading...</p>
+            ) : menuItems.length > 0 ? (
+              <div className="space-y-3 flex-1">
+                {menuItems.map((item, i) => (
+                  <div key={item.id} className="flex items-start gap-3 p-3 rounded-2xl hover:bg-white/10 transition-all cursor-pointer group bg-white/5">
+                    <img 
+                      src={HARDCODED_IMAGES[i % HARDCODED_IMAGES.length]} 
+                      alt={item.dish_name} 
+                      className="w-12 h-12 rounded-[12px] object-cover border border-white/10 flex-shrink-0" 
+                      draggable={false} 
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <span className="text-xs font-black text-white truncate">{item.dish_name}</span>
+                      </div>
+                      <p className="text-[9px] text-slate-300 font-medium line-clamp-2">{item.description}</p>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-400 text-sm">
+                {error ? 'Check error above' : 'No menu items found. Check browser console for details (F12 → Console tab)'}
+              </p>
+            )}
           </div>
 
           <div className="bg-white rounded-[32px] p-6 border border-slate-200 flex-1 overflow-y-auto flex flex-col">
