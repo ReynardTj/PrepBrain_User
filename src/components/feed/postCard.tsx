@@ -35,7 +35,7 @@ export default function PostCard({ post, onVote, onThumbsVoteChange }: Props) {
     setThumbsUp(newThumbsUp)
     setRating(prev => clampRating(prev + RATING_STEP))
     if (post.id) {
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('menu_items')
         .update({ thumbs_up: newThumbsUp })
         .eq('id', post.id)
@@ -57,7 +57,7 @@ export default function PostCard({ post, onVote, onThumbsVoteChange }: Props) {
     setThumbsDown(newThumbsDown)
     setRating(prev => clampRating(prev - RATING_STEP))
     if (post.id) {
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('menu_items')
         .update({ thumbs_down: newThumbsDown })
         .eq('id', post.id)

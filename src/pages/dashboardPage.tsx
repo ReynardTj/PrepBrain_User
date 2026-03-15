@@ -1,3 +1,4 @@
+import { link } from 'fs'
 import { BarChart3, TrendingUp, CheckCircle2, Sparkles, ChefHat, ArrowRight, Zap } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -119,7 +120,7 @@ export default function DashboardPage() {
         {/* Right column */}
         <div className="col-span-4 space-y-10">
           <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-[56px] p-12 text-white relative overflow-hidden cursor-pointer"
-            onClick={() => alert('Link to your AI Recipe Generator here!')}>
+            onClick={() => window.open('https://qkhnh.github.io/PrepBrain/', '_blank')}>
             <div className="relative z-10">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-[24px] flex items-center justify-center mb-8 shadow-xl">
                 <ChefHat size={32} />
