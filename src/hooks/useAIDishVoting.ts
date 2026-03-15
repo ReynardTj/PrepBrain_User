@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { AIDish, AIDishVotingRound, AIDishVoteOption } from '../types'
 
-const DEVICE_ID_KEY = 'ai_dish_voting_device_id'
+// const DEVICE_ID_KEY = 'ai_dish_voting_device_id'
 const VOTES_KEY_PREFIX = 'ai_dish_votes_round_'
 
-function getOrCreateDeviceId(): string {
-  let id = localStorage.getItem(DEVICE_ID_KEY)
-  if (!id) {
-    id = crypto.randomUUID?.() ?? `device-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    localStorage.setItem(DEVICE_ID_KEY, id)
-  }
-  return id
-}
+// function getOrCreateDeviceId(): string {
+//   let id = localStorage.getItem(DEVICE_ID_KEY)
+//   if (!id) {
+//     id = crypto.randomUUID?.() ?? `device-${Date.now()}-${Math.random().toString(36).slice(2)}`
+//     localStorage.setItem(DEVICE_ID_KEY, id)
+//   }
+//   return id
+// }
 
 function getStoredVotesForRound(roundId: string): Record<string, AIDishVoteOption> {
   try {

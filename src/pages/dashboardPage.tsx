@@ -49,7 +49,7 @@ function InfluenceGrowthChart() {
     const svg = e.currentTarget
     const rect = svg.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * width
-    const y = ((e.clientY - rect.top) / rect.height) * height
+    // const y = ((e.clientY - rect.top) / rect.height) * height
     if (containerRef.current) setContainerRect(containerRef.current.getBoundingClientRect())
     if (pathData.points.length === 0) return
     let nearest = 0

@@ -57,7 +57,7 @@ export default function DailyAIDishVoting() {
 
   const isEnded = timerEnded || (round ? new Date(round.endsAt).getTime() <= Date.now() : false)
   const remainingHours = remainingMs / (60 * 60 * 1000)
-  const timerBoxGreen = remainingHours >= 15
+  // const timerBoxGreen = remainingHours >= 15
   const timerBoxYellow = remainingHours >= 3 && remainingHours < 15
   const timerBoxRed = remainingHours > 0 && remainingHours < 3
   const timerBoxClass = isEnded

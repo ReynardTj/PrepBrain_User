@@ -78,7 +78,7 @@ export default function PostCard({ post, onVote, onThumbsVoteChange }: Props) {
     setThumbsDown(Math.max(0, newThumbsDown))
     setRating(prev => clampRating(prev + (isTogglingOff ? RATING_STEP : -RATING_STEP)))
     if (post.id) {
-      const { error, data } = await supabase
+      const { error } = await supabase
         .from('menu_items')
         .update({ thumbs_down: newThumbsDown })
         .eq('id', post.id)

@@ -103,7 +103,7 @@ export default function FeedPage() {
 
   const handleVote = (post: Post) => setSelectedPost(post)
   const handleCloseVote = () => setSelectedPost(null)
-  const handleVoteSubmit = (_post: Post, category: string) => {
+  const handleVoteSubmit = (_post: Post) => {
     // Register vote (e.g. send to API); for now just closing is handled by user clicking Close
   }
   const handlePost = (dishName: string, desc: string, waste: string, image: string | null) => {
