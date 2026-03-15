@@ -63,23 +63,28 @@ export default function FeedPage() {
       if (error) {
         console.error('Error fetching menu items:', error)
       } else if (data) {
-        const transformedPosts = data.map((item: any, index: number) => ({
-          id: item.id,
-          restaurant: RESTAURANT_NAMES[index % RESTAURANT_NAMES.length],
-          location: LOCATIONS[index % LOCATIONS.length],
-          dishName: item.dish_name,
-          description: item.description || 'Delicious off-menu special',
-          image: HARDCODED_IMAGES[index % HARDCODED_IMAGES.length],
-          likes: Math.floor(Math.random() * 100),
-          rating: parseFloat((Math.random() * 2 + 3.5).toFixed(1)),
-          wasteSaved: `${Math.floor(Math.random() * 3 + 1)} kg`,
-          tagline: 'Limited time offer',
-          impact: `Saves approx. ${item.portions_to_clear || 2} meals`,
-          comments: [],
-          originalCategory: 'Fresh' as const,
-          thumbs_up: item.thumbs_up || 0,
-          thumbs_down: item.thumbs_down || 0,
-        })) as Post[]
+        const transformedPosts = data.map((item: any, index: number) => {
+          const thumbsUp = item.thumbs_up || 0
+          const thumbsDown = item.thumbs_down || 0
+          const rating = Math.min(5, Math.max(0, 3.5 + (thumbsUp - thumbsDown) * 0.2))
+          return {
+            id: item.id,
+            restaurant: RESTAURANT_NAMES[index % RESTAURANT_NAMES.length],
+            location: LOCATIONS[index % LOCATIONS.length],
+            dishName: item.dish_name,
+            description: item.description || 'Delicious off-menu special',
+            image: HARDCODED_IMAGES[index % HARDCODED_IMAGES.length],
+            likes: Math.floor(Math.random() * 100),
+            rating: parseFloat(rating.toFixed(1)),
+            wasteSaved: `${Math.floor(Math.random() * 3 + 1)} kg`,
+            tagline: 'Limited time offer',
+            impact: `Saves approx. ${item.portions_to_clear || 2} meals`,
+            comments: [],
+            originalCategory: 'Fresh' as const,
+            thumbs_up: thumbsUp,
+            thumbs_down: thumbsDown,
+          }
+        }) as Post[]
         
         setMenuItems(transformedPosts)
       }
@@ -103,8 +108,7 @@ export default function FeedPage() {
   }
 
   const handleThumbsVoteChange = () => {
-    // Refetch menu items after a thumbs vote is updated
-    fetchMenuItems()
+    // No refetch: rating is updated in PostCard state so it does not jump to random values
   }
 
   return (

@@ -9,67 +9,69 @@ interface Props {
   onThumbsVoteChange?: (postId: string | number, thumbsUp: number, thumbsDown: number) => void
 }
 
+const RATING_STEP = 0.5
+const RATING_MIN = 0
+const RATING_MAX = 5
+
+function clampRating(value: number): number {
+  return Math.min(RATING_MAX, Math.max(RATING_MIN, value))
+}
+
 export default function PostCard({ post, onVote, onThumbsVoteChange }: Props) {
   const [thumbsUp, setThumbsUp] = useState(post.thumbs_up || 0)
   const [thumbsDown, setThumbsDown] = useState(post.thumbs_down || 0)
+  const [rating, setRating] = useState(() => clampRating(post.rating))
 
-  // Sync state with post data whenever post changes (e.g., on refresh from database)
+  // Sync state with post when post identity or initial data changes (e.g. category switch)
   useEffect(() => {
     setThumbsUp(post.thumbs_up || 0)
     setThumbsDown(post.thumbs_down || 0)
-  }, [post.thumbs_up, post.thumbs_down])
+    setRating(clampRating(post.rating))
+  }, [post.id, post.thumbs_up, post.thumbs_down, post.rating])
 
   const handleThumbsUp = async () => {
-    const oldThumbsUp = thumbsUp;
-    const newThumbsUp = thumbsUp + 1;
-    setThumbsUp(newThumbsUp);
-    // Update in Supabase if post has an id
+    const oldThumbsUp = thumbsUp
+    const newThumbsUp = thumbsUp + 1
+    setThumbsUp(newThumbsUp)
+    setRating(prev => clampRating(prev + RATING_STEP))
     if (post.id) {
       const { error, data } = await supabase
         .from('menu_items')
         .update({ thumbs_up: newThumbsUp })
         .eq('id', post.id)
-        .select();
+        .select()
       if (error) {
-        console.error('Error updating thumbs up:', error);
-        setThumbsUp(oldThumbsUp); // Revert on error
-        alert('Failed to update thumbs up. Please try again.');
+        console.error('Error updating thumbs up:', error)
+        setThumbsUp(oldThumbsUp)
+        setRating(prev => clampRating(prev - RATING_STEP))
+        alert('Failed to update thumbs up. Please try again.')
       } else {
-        console.log('✓ Thumbs up updated successfully in database:', data);
-        if (onThumbsVoteChange) {
-          onThumbsVoteChange(post.id, newThumbsUp, thumbsDown);
-        }
+        if (onThumbsVoteChange) onThumbsVoteChange(post.id, newThumbsUp, thumbsDown)
       }
-    } else {
-      console.warn('Post ID is missing, cannot update database');
     }
-  };
+  }
 
   const handleThumbsDown = async () => {
-    const oldThumbsDown = thumbsDown;
-    const newThumbsDown = thumbsDown + 1;
-    setThumbsDown(newThumbsDown);
-    // Update in Supabase if post has an id
+    const oldThumbsDown = thumbsDown
+    const newThumbsDown = thumbsDown + 1
+    setThumbsDown(newThumbsDown)
+    setRating(prev => clampRating(prev - RATING_STEP))
     if (post.id) {
       const { error, data } = await supabase
         .from('menu_items')
         .update({ thumbs_down: newThumbsDown })
         .eq('id', post.id)
-        .select();
+        .select()
       if (error) {
-        console.error('Error updating thumbs down:', error);
-        setThumbsDown(oldThumbsDown); // Revert on error
-        alert('Failed to update thumbs down. Please try again.');
+        console.error('Error updating thumbs down:', error)
+        setThumbsDown(oldThumbsDown)
+        setRating(prev => clampRating(prev + RATING_STEP))
+        alert('Failed to update thumbs down. Please try again.')
       } else {
-        console.log('✓ Thumbs down updated successfully in database:', data);
-        if (onThumbsVoteChange) {
-          onThumbsVoteChange(post.id, thumbsUp, newThumbsDown);
-        }
+        if (onThumbsVoteChange) onThumbsVoteChange(post.id, thumbsUp, newThumbsDown)
       }
-    } else {
-      console.warn('Post ID is missing, cannot update database');
     }
-  };
+  }
   return (
     <div className="bg-white rounded-[40px] border border-slate-200 overflow-hidden group">
       {/* Header */}
@@ -130,7 +132,7 @@ export default function PostCard({ post, onVote, onThumbsVoteChange }: Props) {
         <div className="flex justify-between items-start mb-4">
           <h5 className="font-[1000] text-3xl text-slate-900 tracking-tight">{post.dishName}</h5>
           <div className="flex items-center gap-1.5 text-yellow-500 font-black text-lg bg-yellow-50 px-3 py-1 rounded-xl">
-            <Star size={20} fill="currentColor" /> {post.rating}
+            <Star size={20} fill="currentColor" /> {rating.toFixed(1)}
           </div>
         </div>
         <p className="text-slate-600 font-medium leading-relaxed mb-6">{post.description}</p>
