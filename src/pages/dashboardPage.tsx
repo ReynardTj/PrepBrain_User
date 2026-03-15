@@ -1,4 +1,264 @@
-import { BarChart3, TrendingUp, CheckCircle2, Sparkles, ChefHat, ArrowRight, Zap } from 'lucide-react'
+import { useState, useMemo, useRef } from 'react'
+import { BarChart3, TrendingUp, CheckCircle2, Sparkles, ChefHat, ArrowRight, Zap, Plus } from 'lucide-react'
+
+// Cumulative profile views over 14 days – final value matches metric "Profile Views: 14,842"
+const INFLUENCE_CHART_DATA = [
+  { day: 1, label: 'Day 1', value: 620 },
+  { day: 2, label: 'Day 2', value: 1280 },
+  { day: 3, label: 'Day 3', value: 2100 },
+  { day: 4, label: 'Day 4', value: 3050 },
+  { day: 5, label: 'Day 5', value: 3980 },
+  { day: 6, label: 'Day 6', value: 5120 },
+  { day: 7, label: 'Day 7', value: 6280 },
+  { day: 8, label: 'Day 8', value: 7450 },
+  { day: 9, label: 'Day 9', value: 8620 },
+  { day: 10, label: 'Day 10', value: 9850 },
+  { day: 11, label: 'Day 11', value: 11020 },
+  { day: 12, label: 'Day 12', value: 12200 },
+  { day: 13, label: 'Day 13', value: 13540 },
+  { day: 14, label: 'Day 14', value: 14842 },
+]
+
+const TOOLTIP_WIDTH = 160
+const TOOLTIP_HEIGHT = 52
+const TOOLTIP_OFFSET = 10
+
+function InfluenceGrowthChart() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null)
+  const [containerRect, setContainerRect] = useState<DOMRect | null>(null)
+
+  const width = 700
+  const height = 220
+  const padding = { top: 12, right: 12, bottom: 32, left: 48 }
+  const innerWidth = width - padding.left - padding.right
+  const innerHeight = height - padding.top - padding.bottom
+  const maxVal = Math.max(...INFLUENCE_CHART_DATA.map(d => d.value))
+  const minVal = 0
+
+  const pathData = useMemo(() => {
+    const xScale = (i: number) => padding.left + (i / (INFLUENCE_CHART_DATA.length - 1)) * innerWidth
+    const yScale = (v: number) => padding.top + innerHeight - ((v - minVal) / (maxVal - minVal)) * innerHeight
+    const points = INFLUENCE_CHART_DATA.map((d, i) => `${xScale(i)},${yScale(d.value)}`)
+    const linePath = `M ${points.join(' L ')}`
+    const areaPath = `${linePath} L ${padding.left + innerWidth},${padding.top + innerHeight} L ${padding.left},${padding.top + innerHeight} Z`
+    return { linePath, areaPath, points: INFLUENCE_CHART_DATA.map((d, i) => ({ x: xScale(i), y: yScale(d.value), value: d.value, label: d.label })) }
+  }, [innerWidth, innerHeight, maxVal, minVal])
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const svg = e.currentTarget
+    const rect = svg.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * width
+    const y = ((e.clientY - rect.top) / rect.height) * height
+    if (containerRef.current) setContainerRect(containerRef.current.getBoundingClientRect())
+    if (pathData.points.length === 0) return
+    let nearest = 0
+    let nearestDx = Math.abs(pathData.points[0].x - x)
+    for (let i = 1; i < pathData.points.length; i++) {
+      const dx = Math.abs(pathData.points[i].x - x)
+      if (dx < nearestDx) {
+        nearestDx = dx
+        nearest = i
+      }
+    }
+    setHoverIndex(nearest)
+  }
+
+  const handleMouseLeave = () => {
+    setHoverIndex(null)
+    setContainerRect(null)
+  }
+
+  const tooltipStyle = useMemo(() => {
+    if (hoverIndex == null || !containerRect || !pathData.points[hoverIndex]) return undefined
+    const point = pathData.points[hoverIndex]
+    const scale = Math.min(containerRect.width / width, containerRect.height / height)
+    const offsetX = (containerRect.width - width * scale) / 2
+    const offsetY = (containerRect.height - height * scale) / 2
+    const px = offsetX + point.x * scale
+    const py = offsetY + point.y * scale
+    let left = px - TOOLTIP_WIDTH / 2
+    let top = py - TOOLTIP_HEIGHT - TOOLTIP_OFFSET
+    left = Math.max(8, Math.min(containerRect.width - TOOLTIP_WIDTH - 8, left))
+    top = Math.max(8, Math.min(containerRect.height - TOOLTIP_HEIGHT - 8, top))
+    if (top > py - TOOLTIP_HEIGHT - 4) top = py + TOOLTIP_OFFSET
+    return { left: `${left}px`, top: `${top}px` }
+  }, [hoverIndex, containerRect, pathData.points])
+
+  const yTicks = [0, 5000, 10000, 15000]
+  const gridY = yTicks.map(v => {
+    const y = padding.top + innerHeight - ((v - minVal) / (maxVal - minVal)) * innerHeight
+    return { v, y }
+  })
+
+  return (
+    <div ref={containerRef} className="relative">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="w-full h-64"
+        preserveAspectRatio="xMidYMid meet"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <defs>
+          <linearGradient id="influenceArea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.02" />
+          </linearGradient>
+        </defs>
+        {/* Grid lines */}
+        {gridY.map(({ v, y }) => (
+          <g key={v}>
+            <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 4" />
+            <text x={padding.left - 6} y={y + 4} textAnchor="end" className="fill-slate-400 text-[10px] font-bold" style={{ fontFamily: 'system-ui' }}>{v >= 1000 ? `${v / 1000}k` : v}</text>
+          </g>
+        ))}
+        {[0, 0.25, 0.5, 0.75, 1].map((t, i) => (
+          <line key={i} x1={padding.left + t * innerWidth} y1={padding.top} x2={padding.left + t * innerWidth} y2={height - padding.bottom} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 4" />
+        ))}
+        {/* Area fill */}
+        <path d={pathData.areaPath} fill="url(#influenceArea)" />
+        {/* Line */}
+        <path d={pathData.linePath} fill="none" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        {/* Hover dot */}
+        {hoverIndex != null && pathData.points[hoverIndex] && (
+          <g>
+            <circle cx={pathData.points[hoverIndex].x} cy={pathData.points[hoverIndex].y} r="6" fill="#3b82f6" stroke="white" strokeWidth="2" />
+            <line x1={pathData.points[hoverIndex].x} y1={pathData.points[hoverIndex].y} x2={pathData.points[hoverIndex].x} y2={height - padding.bottom} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="2 2" />
+          </g>
+        )}
+        {/* X-axis labels */}
+        {INFLUENCE_CHART_DATA.filter((_, i) => i % 2 === 0).map((d, i) => {
+          const idx = i * 2
+          const x = padding.left + (idx / (INFLUENCE_CHART_DATA.length - 1)) * innerWidth
+          return <text key={d.day} x={x} y={height - 8} textAnchor="middle" className="fill-slate-400 text-[10px] font-bold" style={{ fontFamily: 'system-ui' }}>{d.label}</text>
+        })}
+      </svg>
+      {hoverIndex != null && pathData.points[hoverIndex] && tooltipStyle && (
+        <div
+          className="absolute z-10 px-3 py-2 bg-slate-900 text-white text-xs font-bold rounded-lg shadow-lg border border-slate-700 pointer-events-none"
+          style={tooltipStyle}
+        >
+          <div className="text-slate-300 font-medium">{pathData.points[hoverIndex].label}</div>
+          <div className="text-blue-300">{pathData.points[hoverIndex].value.toLocaleString()} profile views</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const DAILY_TASKS_STORAGE_KEY = 'wouldyoutry_daily_tasks'
+
+interface DailyTaskItem {
+  id: string
+  task: string
+  done: boolean
+}
+
+const DEFAULT_DAILY_TASKS: DailyTaskItem[] = [
+  { id: '1', task: 'Update surplus inventory', done: true },
+  { id: '2', task: 'Reply to 5 fan comments', done: false },
+  { id: '3', task: 'Publish Week 12 Report', done: false },
+]
+
+function loadStoredTasks(): DailyTaskItem[] {
+  try {
+    const raw = localStorage.getItem(DAILY_TASKS_STORAGE_KEY)
+    if (!raw) return DEFAULT_DAILY_TASKS
+    const parsed = JSON.parse(raw) as DailyTaskItem[]
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_DAILY_TASKS
+  } catch {
+    return DEFAULT_DAILY_TASKS
+  }
+}
+
+function saveTasks(tasks: DailyTaskItem[]) {
+  localStorage.setItem(DAILY_TASKS_STORAGE_KEY, JSON.stringify(tasks))
+}
+
+function DailyTasksCard() {
+  const [tasks, setTasks] = useState<DailyTaskItem[]>(loadStoredTasks)
+  const [isAdding, setIsAdding] = useState(false)
+  const [newTaskText, setNewTaskText] = useState('')
+
+  const remaining = useMemo(() => tasks.filter(t => !t.done).length, [tasks])
+
+  const toggleTask = (id: string) => {
+    setTasks(prev => {
+      const next = prev.map(t => t.id === id ? { ...t, done: !t.done } : t)
+      saveTasks(next)
+      return next
+    })
+  }
+
+  const addTask = () => {
+    const trimmed = newTaskText.trim()
+    if (!trimmed) return
+    const newTask: DailyTaskItem = { id: crypto.randomUUID?.() ?? `t-${Date.now()}`, task: trimmed, done: false }
+    setTasks(prev => {
+      const next = [...prev, newTask]
+      saveTasks(next)
+      return next
+    })
+    setNewTaskText('')
+    setIsAdding(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') addTask()
+  }
+
+  return (
+    <div className="bg-white rounded-[48px] p-10 border border-slate-200">
+      <div className="flex items-center justify-between mb-8">
+        <h4 className="font-[1000] text-xl text-slate-900 flex items-center gap-3"><CheckCircle2 size={24} className="text-blue-500" /> Daily Tasks</h4>
+        <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full">{remaining} REMAINING</span>
+      </div>
+      <div className="space-y-5">
+        {tasks.map(t => (
+          <div
+            key={t.id}
+            role="button"
+            tabIndex={0}
+            onClick={() => toggleTask(t.id)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTask(t.id) } }}
+            className={`flex items-center gap-4 cursor-pointer group transition-opacity duration-200 ${t.done ? 'opacity-70' : ''}`}
+          >
+            <div className={`w-7 h-7 rounded-xl border flex items-center justify-center transition-all flex-shrink-0 ${t.done ? 'bg-green-500 border-green-500' : 'border-slate-300 group-hover:border-slate-900'}`}>
+              {t.done && <CheckCircle2 size={16} className="text-white" />}
+            </div>
+            <span className={`text-sm font-bold transition-all ${t.done ? 'text-slate-300 line-through' : 'text-slate-700'}`}>{t.task}</span>
+          </div>
+        ))}
+        {isAdding ? (
+          <div className="flex flex-wrap items-center gap-2 pt-1 min-w-0">
+            <input
+              type="text"
+              value={newTaskText}
+              onChange={e => setNewTaskText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Task name..."
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              autoFocus
+            />
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button type="button" onClick={addTask} className="px-4 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-bold hover:bg-blue-600 transition-colors whitespace-nowrap">Add</button>
+              <button type="button" onClick={() => { setIsAdding(false); setNewTaskText('') }} className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50 transition-colors whitespace-nowrap">Cancel</button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsAdding(true)}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-slate-200 text-slate-500 font-bold text-sm hover:border-slate-300 hover:text-slate-700 hover:bg-slate-50 transition-all"
+          >
+            <Plus size={18} /> Add Task
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
 
 export default function DashboardPage() {
   return (
@@ -54,11 +314,8 @@ export default function DashboardPage() {
                 <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">Live Tracking</span>
               </div>
             </div>
-            <div className="h-64 w-full relative mb-12">
-              <svg viewBox="0 0 400 100" className="w-full h-full">
-                <path d="M0,90 Q40,85 80,60 T160,70 T240,40 T320,50 T400,10" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" />
-                <path d="M0,90 Q40,85 80,60 T160,70 T240,40 T320,50 T400,10 V100 H0 Z" fill="#3b82f6" opacity="0.07" />
-              </svg>
+            <div className="mb-8">
+              <InfluenceGrowthChart />
             </div>
             <div className="grid grid-cols-4 gap-8 pt-10 border-t border-slate-100">
               {[
@@ -133,26 +390,7 @@ export default function DashboardPage() {
             <Zap className="absolute -top-10 -right-10 text-white/5 w-64 h-64 rotate-45" />
           </div>
 
-          <div className="bg-white rounded-[48px] p-10 border border-slate-200">
-            <div className="flex items-center justify-between mb-8">
-              <h4 className="font-[1000] text-xl text-slate-900 flex items-center gap-3"><CheckCircle2 size={24} className="text-blue-500" /> Daily Tasks</h4>
-              <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-3 py-1 rounded-full">2 REMAINING</span>
-            </div>
-            <div className="space-y-5">
-              {[
-                { task: "Update surplus inventory", done: true },
-                { task: "Reply to 5 fan comments", done: false },
-                { task: "Publish Week 12 Report", done: false }
-              ].map((t, i) => (
-                <div key={i} className="flex items-center gap-4 cursor-pointer group">
-                  <div className={`w-7 h-7 rounded-xl border flex items-center justify-center transition-all ${t.done ? 'bg-green-500 border-green-500' : 'border-slate-300 group-hover:border-slate-900'}`}>
-                    {t.done && <CheckCircle2 size={16} className="text-white" />}
-                  </div>
-                  <span className={`text-sm font-bold transition-all ${t.done ? 'text-slate-300 line-through' : 'text-slate-700'}`}>{t.task}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <DailyTasksCard />
         </div>
       </div>
     </div>
