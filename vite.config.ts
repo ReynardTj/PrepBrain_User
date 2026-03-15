@@ -11,5 +11,5 @@ export default defineConfig({
   },
   // Replace YOUR_REPO_NAME with your exact GitHub repository name
   // e.g. if repo is github.com/username/wouldyoutry → '/wouldyoutry/'
-  base: '/PrepBrain_User/',
+  base: '/WouldYouTry/',
 })
