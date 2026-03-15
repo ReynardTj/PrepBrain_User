@@ -3,6 +3,7 @@ import { TrendingUp, ArrowUpRight } from 'lucide-react'
 import MiniProfile from '../components/feed/miniProfile'
 import DiscoverSidebar from '../components/feed/discoverSidebar'
 import PostCard from '../components/feed/postCard'
+import DailyAIDishVoting from '../components/feed/dailyAIDishVoting'
 import PostComposer from '../components/feed/postComposer'
 import VoteModal from '../components/shared/voteModal'
 import { CATEGORIZED_POSTS } from '../data/mockData'
@@ -102,6 +103,9 @@ export default function FeedPage() {
 
   const handleVote = (post: Post) => setSelectedPost(post)
   const handleCloseVote = () => setSelectedPost(null)
+  const handleVoteSubmit = (_post: Post, category: string) => {
+    // Register vote (e.g. send to API); for now just closing is handled by user clicking Close
+  }
   const handlePost = (dishName: string, desc: string, waste: string, image: string | null) => {
     createPost(dishName, desc, waste, image)
     setFeedCategory('All Items')
@@ -113,7 +117,13 @@ export default function FeedPage() {
 
   return (
     <>
-      {selectedPost && <VoteModal onClose={handleCloseVote} />}
+      {selectedPost && (
+        <VoteModal
+          post={selectedPost}
+          onClose={handleCloseVote}
+          onVote={handleVoteSubmit}
+        />
+      )}
 
       <div className="grid grid-cols-12 gap-8 pt-6">
         {/* Left sidebar */}
@@ -126,6 +136,7 @@ export default function FeedPage() {
 
         {/* Main feed */}
         <div className="col-span-6 space-y-8">
+          <DailyAIDishVoting />
           <PostComposer onPost={handlePost} />
           {loading ? (
             <div className="text-center text-slate-400 py-8">Loading menu items...</div>
