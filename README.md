@@ -75,7 +75,7 @@ WouldYouTry enables:
   - Express  
 
 - **Database**
-  - Firebase / MongoDB  
+  - Supabase 
 
 - **APIs & Tools**
   - Mapbox (maps and location)
