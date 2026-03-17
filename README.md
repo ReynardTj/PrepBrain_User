@@ -1,73 +1,129 @@
-# React + TypeScript + Vite
+#  WouldYouTry
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A dedicated social platform where people discover, rate, and validate creative off-menu dishes from brunch cafés.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+##  Overview
 
-## React Compiler
+**WouldYouTry** is the community-facing platform of our hackathon project.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+It allows café owners to share experimental dishes made from leftover ingredients and gather real-time feedback from customers before adding them to the menu.
 
-## Expanding the ESLint configuration
+Instead of guessing what might work, owners can validate ideas through engagement.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+##  Problem
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Brunch menus are often repetitive because:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Owners avoid risk when trying new dishes  
+- There is no fast way to test customer interest  
+- New ideas may fail without feedback  
+- Customers are not involved in menu decisions  
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+##  Solution
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+WouldYouTry enables:
+
+- Sharing experimental dishes publicly  
+- Community-driven feedback ("Would you try this?")  
+- Data-backed decisions before launching dishes  
+
+
+##  Features
+
+###  Create Post
+
+- Upload a dish image  
+- Add description (ingredients, concept, notes)  
+- Attach location (Map integration)  
+
+
+###  Community Feedback
+
+- Users can:
+  - Like (Would Try)
+  - Dislike (Would Not Try)  
+
+- Ratings update dynamically based on interactions  
+
+
+###  Engagement Metrics
+
+- Real-time popularity tracking  
+- Visual rating indicators  
+- Helps owners evaluate demand  
+
+
+###  Explore Page
+
+- Discover nearby dishes  
+- Interactive map (Mapbox integration)  
+- Browse trending or recent posts  
+
+
+##  Tech Stack
+
+- **Frontend**
+  - React (Vite)
+  - TypeScript
+  - Tailwind CSS  
+
+- **Backend (basic / optional)**
+  - Node.js
+  - Express  
+
+- **Database**
+  - Firebase / MongoDB  
+
+- **APIs & Tools**
+  - Mapbox (maps and location)
+  - Image upload handling  
+
+
+##  How It Works
+
+1. Café owner creates a post with a new dish  
+2. The post appears on the feed  
+3. Users interact (like / dislike)  
+4. Ratings update in real time  
+5. Owners use feedback to decide whether to launch the dish  
+
+
+##  Use Case
+
+Example:
+
+> A café posts a "Matcha Pancake with Citrus Cream" made from leftover ingredients.  
+> If users respond positively → it becomes a menu item.  
+> If not → no risk taken.
+
+
+##  Hackathon Scope
+
+This project focuses on:
+
+- Fast and intuitive UI/UX  
+- Real-time interaction simulation  
+- Simple but impactful social mechanics  
+
+
+##  Future Improvements
+
+- User accounts & authentication  
+- Comment system (thread-style discussions)  
+- Save / bookmark posts  
+- AI-based trend insights  
+- Analytics dashboard for café owners  
+
+
+##  Related Projects
+
+- [WouldYouTry.Create](https://qkhnh.github.io/WouldYouTry.Create/) – AI dish generation tool  
+
+
+##  Note
+
+This repository contains **only the social platform (WouldYouTry)**.  
+The AI management tool (**WouldYouTry.Create**) is developed separately.
